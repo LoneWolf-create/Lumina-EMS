@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina — Editorial Management System (CMS)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#faf9f6',
+                            100: '#f3f0e6',
+                            500: '#2c2c2c',
+                            600: '#1a1a1a',
+                            700: '#000000',
+                        },
+                        amberAccent: {
+                            500: '#f59e0b',
+                            600: '#b45309',
+                            700: '#92400e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Newsreader', 'Georgia', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #44403c;
+        }
+    </style>
+</head>
+<body class="bg-[#faf8f5] text-stone-900 dark:bg-gray-950 dark:text-stone-100 font-sans min-h-screen flex flex-col selection:bg-amber-100 dark:selection:bg-amber-900/40 transition-colors duration-200">
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 px-5 py-3 rounded-lg bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 shadow-2xl border border-stone-700/30 text-xs font-medium tracking-wide">
+        <i data-lucide="info" class="w-4 h-4 text-amber-500"></i>
+        <span id="toast-message">Notification message</span>
+    </div>
+
+    <!-- Header Navbar -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-[#faf8f5]/90 dark:bg-gray-950/90 border-b border-stone-200 dark:border-stone-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
+                <div class="bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 p-2 rounded-lg">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-serif font-semibold text-2xl tracking-tight">Lumina<span class="text-amber-700 dark:text-amber-500">.</span></span>
+                        <span class="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-400 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">CMS Studio</span>
+                    </div>
+                    <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans tracking-wide">Editorial Management System</p>
+                </div>
+            </div>
+
+            <!-- Actions Right Header -->
+            <div class="flex items-center space-x-3">
+                <!-- Backup & Restore Dropdown / Tools -->
+                <button onclick="toggleDataMenu()" class="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 rounded-lg border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-medium text-stone-700 dark:text-stone-300 transition">
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                    <span>Data Ops</span>
+                    <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                </button>
+
+                <!-- New Post Button -->
+                <button onclick="openEditorModal()" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white text-xs uppercase tracking-wider font-semibold shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Compose Essay</span>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleTheme()" class="p-2 rounded-lg border border-stone-300 dark:border-stone-700 hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 transition">
+                    <i data-lucide="sun" id="sun-icon" class="w-4 h-4 hidden"></i>
+                    <i data-lucide="moon" id="moon-icon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Ops Dropdown Menu -->
+        <div id="data-menu" class="hidden absolute right-16 top-16 w-56 bg-white dark:bg-stone-900 rounded-xl shadow-xl border border-stone-200 dark:border-stone-800 p-2 z-40 text-xs">
+            <button onclick="exportJSON()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center gap-2 text-stone-700 dark:text-stone-300">
+                <i data-lucide="download" class="w-4 h-4 text-amber-600"></i> Export Backup (.JSON)
+            </button>
+            <label class="w-full text-left px-3 py-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center gap-2 text-stone-700 dark:text-stone-300 cursor-pointer">
+                <i data-lucide="upload" class="w-4 h-4 text-amber-600"></i> Import JSON Backup
+                <input type="file" id="import-file" accept=".json" class="hidden" onchange="importJSON(event)">
+            </label>
+            <hr class="my-1 border-stone-200 dark:border-stone-800">
+            <button onclick="confirmResetDefaults()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center gap-2">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset to Seed Essays
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Dashboard Statistics Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center text-stone-500 dark:text-stone-400 mb-2">
+                    <span class="text-xs uppercase tracking-widest font-semibold">Total Essays</span>
+                    <i data-lucide="file-text" class="w-4 h-4 text-amber-700 dark:text-amber-500"></i>
+                </div>
+                <div class="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100" id="stat-total-essays">0</div>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center text-stone-500 dark:text-stone-400 mb-2">
+                    <span class="text-xs uppercase tracking-widest font-semibold">Total Words</span>
+                    <i data-lucide="align-left" class="w-4 h-4 text-amber-700 dark:text-amber-500"></i>
+                </div>
+                <div class="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100" id="stat-total-words">0</div>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center text-stone-500 dark:text-stone-400 mb-2">
+                    <span class="text-xs uppercase tracking-widest font-semibold">Active Topics</span>
+                    <i data-lucide="layers" class="w-4 h-4 text-amber-700 dark:text-amber-500"></i>
+                </div>
+                <div class="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100" id="stat-categories-count">0</div>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center text-stone-500 dark:text-stone-400 mb-2">
+                    <span class="text-xs uppercase tracking-widest font-semibold">Avg Read Time</span>
+                    <i data-lucide="clock" class="w-4 h-4 text-amber-700 dark:text-amber-500"></i>
+                </div>
+                <div class="text-3xl font-serif font-bold text-stone-900 dark:text-stone-100" id="stat-avg-readtime">0 min</div>
+            </div>
+        </section>
+
+        <!-- Controls: Filters, Search, Layout View Toggle -->
+        <section class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-stone-900 p-4 rounded-xl border border-stone-200 dark:border-stone-800">
+            <!-- Search Input -->
+            <div class="relative w-full md:w-80">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                <input 
+                    type="text" 
+                    id="cms-search" 
+                    oninput="handleSearch(this.value)" 
+                    placeholder="Search by title, author, content..." 
+                    class="w-full pl-10 pr-8 py-2 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-xs text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+                />
+                <button id="cms-clear-search" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+            <!-- Category Pills Filter -->
+            <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0" id="category-filters">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <!-- View Switcher -->
+            <div class="flex items-center space-x-1 bg-stone-100 dark:bg-stone-800 p-1 rounded-lg border border-stone-200 dark:border-stone-700 self-end md:self-auto">
+                <button onclick="setViewMode('table')" id="btn-view-table" class="p-1.5 rounded text-stone-700 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition" title="Table View">
+                    <i data-lucide="table" class="w-4 h-4"></i>
+                </button>
+                <button onclick="setViewMode('grid')" id="btn-view-grid" class="p-1.5 rounded text-stone-700 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition" title="Grid View">
+                    <i data-lucide="grid" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Content Listing Container (Table or Grid View) -->
+        <section id="posts-container">
+            <!-- Dynamic Content Injected Here -->
+        </section>
+
+        <!-- Empty State Handler -->
+        <div id="cms-empty-state" class="hidden text-center py-16 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800">
+            <div class="inline-flex p-4 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400 mb-3">
+                <i data-lucide="folder-open" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-serif text-stone-900 dark:text-stone-100 mb-1">No Essays Found</h3>
+            <p class="text-xs text-stone-500 dark:text-stone-400 max-w-xs mx-auto mb-5 font-sans">No matching entries in your journal database.</p>
+            <button onclick="resetFilters()" class="px-4 py-2 border border-stone-900 dark:border-stone-100 text-stone-900 dark:text-stone-100 font-medium text-xs uppercase tracking-wider hover:bg-stone-900 hover:text-white dark:hover:bg-stone-100 dark:hover:text-stone-900 transition rounded-lg">Clear Filters</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-stone-200 dark:border-stone-800 bg-[#faf8f5] dark:bg-gray-950 py-8 transition-colors mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
+            <p class="font-serif">Lumina Editorial CMS &mdash; Direct Storage Key: <code class="bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5 rounded text-[11px] font-mono">lumina_journal_posts</code></p>
+            <div class="flex items-center space-x-4">
+                <button onclick="exportJSON()" class="hover:text-stone-900 dark:hover:text-stone-200">Export JSON</button>
+                <span>&bull;</span>
+                <button onclick="confirmResetDefaults()" class="hover:text-stone-900 dark:hover:text-stone-200">Reset Defaults</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Full Screen Editor / Writing Studio Modal -->
+    <div id="editor-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="editor-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-stone-900/75 backdrop-blur-sm transition-opacity" onclick="closeEditorModal()"></div>
+
+        <div class="min-h-screen flex items-center justify-center p-2 sm:p-6">
+            <div class="relative bg-[#faf8f5] dark:bg-stone-950 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all max-w-6xl w-full border border-stone-200 dark:border-stone-800 flex flex-col max-h-[92vh]">
+                
+                <!-- Studio Header -->
+                <div class="px-6 py-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between bg-white dark:bg-stone-900 shrink-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 p-2 rounded-lg">
+                            <i data-lucide="feather" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 id="editor-modal-title" class="text-lg font-serif font-semibold text-stone-900 dark:text-stone-100">Writing Studio</h3>
+                            <div class="flex items-center space-x-2 text-[11px] text-stone-400">
+                                <span id="save-status-indicator">Draft Ready</span>
+                                <span>&bull;</span>
+                                <span id="live-word-count">0 words</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editor Controls -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="toggleSideBySidePreview()" id="preview-toggle-btn" class="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 text-xs font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition flex items-center gap-1.5">
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            <span id="preview-btn-label">Split Preview</span>
+                        </button>
+
+                        <button onclick="closeEditorModal()" class="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Studio Body Grid -->
+                <form id="editor-form" onsubmit="handleFormSubmit(event)" class="flex-grow flex flex-col overflow-hidden">
+                    <input type="hidden" id="form-post-id" value="">
+
+                    <!-- Top Metadata Panel -->
+                    <div class="p-6 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                        <!-- Title (Spans 2) -->
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 mb-1">Essay Title</label>
+                            <input type="text" id="form-title" required oninput="triggerAutoSave()" placeholder="e.g. On the Epistemology of Digital Rationality..." class="w-full px-3.5 py-2 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-base font-serif text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100">
+                        </div>
+
+                        <!-- Author -->
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 mb-1">Author / Essayist</label>
+                            <input type="text" id="form-author" required oninput="triggerAutoSave()" placeholder="e.g. Aurelius Vance" class="w-full px-3.5 py-2 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100">
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 mb-1">Topic Category</label>
+                            <input type="text" id="form-category" required list="category-suggestions" oninput="triggerAutoSave()" placeholder="e.g. Philosophy" class="w-full px-3.5 py-2 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100">
+                            <datalist id="category-suggestions">
+                                <option value="Philosophy">
+                                <option value="Life & Culture">
+                                <option value="Political Thought">
+                            </datalist>
+                        </div>
+
+                        <!-- Cover Image URL -->
+                        <div class="md:col-span-2 flex flex-col">
+                            <label class="block text-[11px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 mb-1">Cover Image URL</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="form-image" oninput="triggerAutoSave()" placeholder="https://images.unsplash.com/..." class="flex-grow px-3.5 py-2 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100">
+                                
+                                <button type="button" onclick="selectPresetImage()" class="px-3 py-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs rounded-lg border border-stone-300 dark:border-stone-700 font-medium whitespace-nowrap transition">
+                                    Random Unsplash
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar & Editing Split View -->
+                    <div class="flex-grow flex flex-col min-h-0 bg-[#faf8f5] dark:bg-stone-950">
+                        <!-- Toolbar -->
+                        <div class="px-4 py-2 border-b border-stone-200 dark:border-stone-800 bg-stone-100/70 dark:bg-stone-900/70 flex items-center gap-1 overflow-x-auto shrink-0">
+                            <button type="button" onclick="insertFormatting('h2')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 font-serif font-bold text-xs" title="Heading 2">H2</button>
+                            <button type="button" onclick="insertFormatting('bold')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold text-xs" title="Bold">B</button>
+                            <button type="button" onclick="insertFormatting('italic')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 italic text-xs font-serif" title="Italic">I</button>
+                            <div class="h-4 w-[1px] bg-stone-300 dark:bg-stone-700 mx-1"></div>
+                            <button type="button" onclick="insertFormatting('quote')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs" title="Blockquote">
+                                <i data-lucide="quote" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="insertFormatting('list')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs" title="Bullet List">
+                                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="insertFormatting('divider')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs" title="Horizontal Divider">
+                                <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <div class="h-4 w-[1px] bg-stone-300 dark:bg-stone-700 mx-1"></div>
+                            <button type="button" onclick="generateAutoExcerpt()" class="px-2 py-1 rounded hover:bg-amber-100 text-amber-800 dark:hover:bg-amber-950 dark:text-amber-400 text-xs font-medium flex items-center gap-1 transition" title="Auto-generate Excerpt">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Auto Excerpt
+                            </button>
+                        </div>
+
+                        <!-- Split Content Box -->
+                        <div class="flex-grow grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-200 dark:divide-stone-800 overflow-hidden" id="editor-split-container">
+                            <!-- Raw Input Pane -->
+                            <div class="h-full flex flex-col p-4 overflow-y-auto">
+                                <label class="block text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-2">Editor (Markdown / Plain Text)</label>
+                                <textarea id="form-content" required oninput="updateWordCount(); renderLivePreview(); triggerAutoSave();" placeholder="Begin writing your manuscript here... Use double line breaks for new paragraphs." class="w-full flex-grow bg-transparent border-0 font-serif text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-0 resize-none leading-relaxed min-h-[300px]"></textarea>
+                            </div>
+
+                            <!-- Live Reader Preview Pane -->
+                            <div id="live-preview-pane" class="h-full flex flex-col p-4 bg-stone-50/50 dark:bg-stone-900/30 overflow-y-auto">
+                                <label class="block text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-2">Live Rendering Preview</label>
+                                <div id="editor-live-preview" class="prose dark:prose-invert font-serif text-stone-800 dark:text-stone-200 text-base leading-relaxed space-y-4 max-w-none">
+                                    <p class="italic text-stone-400 text-sm">Preview content will render here in real-time...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Footer -->
+                    <div class="px-6 py-4 border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex items-center justify-between shrink-0">
+                        <button type="button" onclick="closeEditorModal()" class="px-4 py-2 text-xs uppercase tracking-wider font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition">Cancel</button>
+                        <button type="submit" class="px-6 py-2.5 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold text-xs uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-white transition rounded-lg shadow-sm">
+                            Save & Sync to Lumina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Article Reader Preview Modal -->
+    <div id="reader-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-stone-900/60 backdrop-blur-md transition-opacity" onclick="closeReaderModal()"></div>
+
+        <div class="min-h-full flex items-center justify-center p-3 sm:p-6">
+            <div class="relative bg-[#faf8f5] dark:bg-stone-900 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-3xl w-full border border-stone-200 dark:border-stone-800 my-4 sm:my-8">
+                
+                <button onclick="closeReaderModal()" class="absolute top-6 right-6 z-10 p-2 rounded-full bg-stone-100/80 dark:bg-stone-800/80 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Reader Header Image -->
+                <div class="h-64 sm:h-80 w-full overflow-hidden relative bg-stone-200 dark:bg-stone-800">
+                    <img id="modal-cover" src="" alt="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#faf8f5] dark:from-stone-900 via-transparent to-transparent"></div>
+                </div>
+
+                <!-- Article Header & Body -->
+                <div class="px-6 sm:px-12 pb-12 pt-4 relative -mt-16">
+                    <span id="modal-category" class="text-xs uppercase tracking-widest font-semibold text-amber-700 dark:text-amber-500 mb-3 inline-block"></span>
+                    <h2 id="modal-title" class="text-3xl sm:text-4xl font-serif font-normal text-stone-900 dark:text-stone-100 leading-tight mb-6"></h2>
+
+                    <div class="flex items-center justify-between py-4 mb-8 border-y border-stone-200/80 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        <div class="flex items-center space-x-3">
+                            <div id="modal-author-avatar" class="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-serif font-bold flex items-center justify-center text-xs"></div>
+                            <div>
+                                <p id="modal-author" class="font-semibold text-stone-900 dark:text-stone-100 uppercase tracking-wider"></p>
+                                <p class="text-[10px] text-stone-400">Journal Essayist</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span id="modal-date" class="block"></span>
+                            <span id="modal-readtime" class="block italic font-serif"></span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Content -->
+                    <div id="modal-content" class="prose dark:prose-invert max-w-none text-stone-800 dark:text-stone-200 font-serif leading-relaxed text-lg space-y-6"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Scripting Logic -->
+    <script>
+        // --- Lumina Seed Posts Data ---
+        const INITIAL_POSTS = [
+            {
+                id: '1',
+                title: 'The Stoic Citadel: Inner Freedom in Imperfect Empires',
+                category: 'Philosophy',
+                author: 'Marcus Aurelius Vance',
+                date: 'Nov 04, 2026',
+                readTime: '7 min read',
+                image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+                excerpt: 'Examining Epictetus and Seneca on distinguishing control from outcome, and how inner agency remains unassailable.',
+                content: `In an era defined by overwhelming information streams and shifting social tides, ancient Stoic doctrine feels less like historical artifact and more like modern mental armor.\n\nAt the core of Epictetus’ Enchiridion lies a simple yet radical distinction: the dichotomy of control. Things are either within our power or beyond it. Our opinions, impulses, and desires belong to us; external events, political turbulence, and the opinions of others belong strictly to the world.\n\nWhen we internalize this boundary, we build what Pierre Hadot termed the "Inner Citadel." The citadel is not an escape from duty, but a sanctuary of clarity from which we act with purpose, unbound by anxiety over uncontrollable outcomes.`
+            },
+            {
+                id: '2',
+                title: 'The Architecture of the Public Square: Power and Discourse',
+                category: 'Political Thought',
+                author: 'Dr. Evelyn Reed',
+                date: 'Oct 29, 2026',
+                readTime: '9 min read',
+                image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80',
+                excerpt: 'An investigation into how digital algorithms reshape democratic discourse, civic trust, and Habermas’ communicative rationality.',
+                content: `Jürgen Habermas famously conceptualized the public square as a sphere where private individuals assemble to formulate public opinion through rational discourse. Today, that square is constructed not of stone and coffeehouses, but of algorithmic feeds designed for maximum engagement.\n\nPolitical philosophy must now confront a foundational dilemma: when debate is governed by attention-seeking metrics, nuanced compromise dissolves into tribal performance. True civic sovereignty requires deliberate spaces designed for slow deliberation rather than rapid reaction.\n\nRestoring genuine democratic consensus requires re-imagining our digital infrastructure around shared truth, epistemic humility, and institutional accountability.`
+            },
+            {
+                id: '3',
+                title: 'Solitude in the Hyperconnected Age',
+                category: 'Life & Culture',
+                author: 'Julian Thorne',
+                date: 'Oct 19, 2026',
+                readTime: '5 min read',
+                image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+                excerpt: 'Why quiet introspection has become our most endangered cultural resource and how to reclaim self-knowledge.',
+                content: `We live in an age of constant connectivity, yet genuine communion with oneself has become increasingly rare. Solitude is often mistaken for loneliness, yet they are antithetical states.\n\nLoneliness is marked by a painful sense of lack, whereas solitude is the richness of presence with one's own thoughts. Without solitude, our convictions are merely echoes of the crowd, and our creative reserves remain untapped.\n\nReclaiming solitude requires intentional boundaries. Sitting quietly without distraction is not passive idle time; it is the fundamental practice through which we digest experience and cultivate self-knowledge.`
+            },
+            {
+                id: '4',
+                title: 'The Social Contract in an Age of Automation',
+                category: 'Political Thought',
+                author: 'Clara Hayes',
+                date: 'Sep 27, 2026',
+                readTime: '8 min read',
+                image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
+                excerpt: 'Re-evaluating Hobbes and Rousseau as technology alters labor, distribution of wealth, and state responsibility.',
+                content: `Every political order rests upon an implicit agreement between citizen and sovereign state regarding security, opportunity, and shared prosperity. As autonomous systems redefine labor and economic value, this tacit social contract faces unprecedented strain.\n\nClassical theories of governance tied political participation directly to economic contribution through work. When technological productivity decouples from human labor hours, we must rethink distributional justice.\n\nThe challenge of the coming decades is not merely technological efficiency, but ethical design: ensuring that human dignity and civic empowerment remain the central purpose of economic progress.`
+            }
+        ];
+
+        const UNSPLASH_PRESETS = [
+            'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=800&q=80'
+        ];
+
+        // --- CMS State ---
+        let posts = [];
+        let activeCategory = 'All';
+        let searchQuery = '';
+        let viewMode = 'table'; // 'table' or 'grid'
+        let autoSaveTimer = null;
+        let isSplitPreviewActive = true;
+
+        // --- Initialization ---
+        window.onload = function() {
+            initTheme();
+            loadPostsFromStorage();
+            renderStats();
+            renderCategoryFilters();
+            renderPosts();
+            lucide.createIcons();
+        };
+
+        // --- Storage Management ---
+        function loadPostsFromStorage() {
+            const saved = localStorage.getItem('lumina_journal_posts');
+            if (saved) {
+                try {
+                    posts = JSON.parse(saved);
+                } catch(e) {
+                    posts = INITIAL_POSTS;
+                    savePostsToStorage();
+                }
+            } else {
+                posts = INITIAL_POSTS;
+                savePostsToStorage();
+            }
+        }
+
+        function savePostsToStorage() {
+            localStorage.setItem('lumina_journal_posts', JSON.stringify(posts));
+            renderStats();
+            renderCategoryFilters();
+            renderPosts();
+        }
+
+        // --- Theme Handler ---
+        function initTheme() {
+            const isDark = localStorage.getItem('lumina_theme') === 'dark' || 
+                (!('lumina_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('sun-icon').classList.remove('hidden');
+                document.getElementById('moon-icon').classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('sun-icon').classList.add('hidden');
+                document.getElementById('moon-icon').classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('lumina_theme', isDark ? 'dark' : 'light');
+            document.getElementById('sun-icon').classList.toggle('hidden', !isDark);
+            document.getElementById('moon-icon').classList.toggle('hidden', isDark);
+        }
+
+        // --- Stats Dashboard ---
+        function renderStats() {
+            document.getElementById('stat-total-essays').textContent = posts.length;
+
+            const totalWords = posts.reduce((acc, p) => {
+                const words = p.content ? p.content.trim().split(/\s+/).length : 0;
+                return acc + words;
+            }, 0);
+            document.getElementById('stat-total-words').textContent = totalWords.toLocaleString();
+
+            const categories = new Set(posts.map(p => p.category));
+            document.getElementById('stat-categories-count').textContent = categories.size;
+
+            let totalMinutes = 0;
+            posts.forEach(p => {
+                const match = p.readTime ? p.readTime.match(/\d+/) : null;
+                if (match) totalMinutes += parseInt(match[0]);
+            });
+            const avg = posts.length > 0 ? Math.round(totalMinutes / posts.length) : 0;
+            document.getElementById('stat-avg-readtime').textContent = `${avg} min`;
+        }
+
+        // --- Filters & Rendering ---
+        function getCategoriesList() {
+            const cats = ['All'];
+            posts.forEach(p => {
+                if (p.category && !cats.includes(p.category)) {
+                    cats.push(p.category);
+                }
+            });
+            return cats;
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            const categories = getCategoriesList();
+
+            container.innerHTML = categories.map(cat => {
+                const isActive = cat === activeCategory;
+                const activeStyle = 'bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 font-semibold';
+                const inactiveStyle = 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700';
+
+                return `<button onclick="setCategory('${cat}')" class="px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition ${isActive ? activeStyle : inactiveStyle}">
+                    ${cat}
+                </button>`;
+            }).join('');
+        }
+
+        function setCategory(cat) {
+            activeCategory = cat;
+            renderCategoryFilters();
+            renderPosts();
+        }
+
+        function handleSearch(query) {
+            searchQuery = query.trim().toLowerCase();
+            const clearBtn = document.getElementById('cms-clear-search');
+            if (searchQuery.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+            renderPosts();
+        }
+
+        function clearSearch() {
+            document.getElementById('cms-search').value = '';
+            handleSearch('');
+        }
+
+        function resetFilters() {
+            activeCategory = 'All';
+            searchQuery = '';
+            document.getElementById('cms-search').value = '';
+            document.getElementById('cms-clear-search').classList.add('hidden');
+            renderCategoryFilters();
+            renderPosts();
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            const btnTable = document.getElementById('btn-view-table');
+            const btnGrid = document.getElementById('btn-view-grid');
+
+            if (mode === 'table') {
+                btnTable.classList.add('bg-white', 'dark:bg-stone-700', 'shadow-sm');
+                btnGrid.classList.remove('bg-white', 'dark:bg-stone-700', 'shadow-sm');
+            } else {
+                btnGrid.classList.add('bg-white', 'dark:bg-stone-700', 'shadow-sm');
+                btnTable.classList.remove('bg-white', 'dark:bg-stone-700', 'shadow-sm');
+            }
+            renderPosts();
+        }
+
+        // --- Render Posts Container ---
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            const emptyState = document.getElementById('cms-empty-state');
+
+            const filtered = posts.filter(p => {
+                const matchesCat = activeCategory === 'All' || (p.category && p.category.toLowerCase() === activeCategory.toLowerCase());
+                const matchesQuery = !searchQuery || 
+                    (p.title && p.title.toLowerCase().includes(searchQuery)) ||
+                    (p.author && p.author.toLowerCase().includes(searchQuery)) ||
+                    (p.content && p.content.toLowerCase().includes(searchQuery));
+                return matchesCat && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            if (viewMode === 'table') {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-stone-200 dark:border-stone-800 text-[11px] uppercase tracking-wider text-stone-400 font-semibold bg-stone-50/50 dark:bg-stone-800/40">
+                                        <th class="py-3.5 px-4">Essay Details</th>
+                                        <th class="py-3.5 px-4">Category</th>
+                                        <th class="py-3.5 px-4">Author</th>
+                                        <th class="py-3.5 px-4">Date</th>
+                                        <th class="py-3.5 px-4">Length</th>
+                                        <th class="py-3.5 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-stone-100 dark:divide-stone-800 text-xs">
+                                    ${filtered.map(post => `
+                                        <tr class="hover:bg-stone-50/80 dark:hover:bg-stone-800/40 transition">
+                                            <td class="py-4 px-4">
+                                                <div class="flex items-center space-x-3">
+                                                    <img src="${post.image}" alt="" class="w-10 h-10 rounded object-cover bg-stone-200 dark:bg-stone-800 shrink-0" onerror="this.src='${UNSPLASH_PRESETS[0]}'">
+                                                    <div>
+                                                        <a href="javascript:void(0)" onclick="openReaderModal('${post.id}')" class="font-serif text-sm font-semibold text-stone-900 dark:text-stone-100 hover:text-amber-700 dark:hover:text-amber-500 line-clamp-1">
+                                                            ${post.title}
+                                                        </a>
+                                                        <p class="text-[11px] text-stone-400 line-clamp-1 font-serif italic">${post.excerpt}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4 whitespace-nowrap">
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50">
+                                                    ${post.category}
+                                                </span>
+                                            </td>
+                                            <td class="py-4 px-4 whitespace-nowrap font-medium text-stone-800 dark:text-stone-200">${post.author}</td>
+                                            <td class="py-4 px-4 whitespace-nowrap text-stone-400">${post.date}</td>
+                                            <td class="py-4 px-4 whitespace-nowrap font-serif italic text-stone-500">${post.readTime}</td>
+                                            <td class="py-4 px-4 whitespace-nowrap text-right">
+                                                <div class="flex items-center justify-end space-x-2">
+                                                    <button onclick="openEditorModal('${post.id}')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300" title="Edit Essay">
+                                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                                    </button>
+                                                    <button onclick="openReaderModal('${post.id}')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300" title="Preview Reader View">
+                                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                                    </button>
+                                                    <button onclick="clonePost('${post.id}')" class="p-1.5 rounded hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300" title="Clone Essay">
+                                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                                    </button>
+                                                    <button onclick="deletePost('${post.id}')" class="p-1.5 rounded hover:bg-red-100 text-red-600 dark:hover:bg-red-950 dark:text-red-400" title="Delete Essay">
+                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${filtered.map(post => `
+                            <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm flex flex-col justify-between group">
+                                <div>
+                                    <div class="h-44 w-full overflow-hidden relative bg-stone-100 dark:bg-stone-800">
+                                        <img src="${post.image}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='${UNSPLASH_PRESETS[0]}'">
+                                        <div class="absolute top-3 left-3">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-stone-900/80 text-stone-100 backdrop-blur-md">
+                                                ${post.category}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="p-5 space-y-3">
+                                        <h3 onclick="openReaderModal('${post.id}')" class="text-xl font-serif font-normal text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-500 cursor-pointer transition line-clamp-2 leading-snug">
+                                            ${post.title}
+                                        </h3>
+                                        <p class="text-xs font-serif text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed">
+                                            ${post.excerpt}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="p-5 pt-0 flex items-center justify-between border-t border-stone-100 dark:border-stone-800/80 mt-4 text-xs">
+                                    <div class="text-[11px] text-stone-500">
+                                        <span class="font-medium text-stone-900 dark:text-stone-200">${post.author}</span>
+                                        <span class="block font-serif italic">${post.readTime}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-1">
+                                        <button onclick="openEditorModal('${post.id}')" class="p-1.5 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300" title="Edit">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <button onclick="openReaderModal('${post.id}')" class="p-1.5 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300" title="Preview">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                        <button onclick="clonePost('${post.id}')" class="p-1.5 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300" title="Clone">
+                                            <i data-lucide="copy" class="w-4 h-4"></i>
+                                        </button>
+                                        <button onclick="deletePost('${post.id}')" class="p-1.5 rounded hover:bg-red-100 text-red-600 dark:hover:bg-red-950 dark:text-red-400" title="Delete">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- CRUD & Post Operations ---
+        function openEditorModal(postId = null) {
+            const form = document.getElementById('editor-form');
+            form.reset();
+
+            if (postId) {
+                const post = posts.find(p => p.id === postId);
+                if (post) {
+                    document.getElementById('editor-modal-title').textContent = 'Edit Manuscript';
+                    document.getElementById('form-post-id').value = post.id;
+                    document.getElementById('form-title').value = post.title || '';
+                    document.getElementById('form-category').value = post.category || 'Philosophy';
+                    document.getElementById('form-author').value = post.author || '';
+                    document.getElementById('form-image').value = post.image || '';
+                    document.getElementById('form-content').value = post.content || '';
+                }
+            } else {
+                document.getElementById('editor-modal-title').textContent = 'Compose New Manuscript';
+                document.getElementById('form-post-id').value = '';
+                document.getElementById('form-category').value = 'Philosophy';
+                document.getElementById('form-author').value = 'Marcus Aurelius Vance';
+                document.getElementById('form-image').value = UNSPLASH_PRESETS[Math.floor(Math.random() * UNSPLASH_PRESETS.length)];
+            }
+
+            updateWordCount();
+            renderLivePreview();
+            document.getElementById('save-status-indicator').textContent = 'Draft Ready';
+            document.getElementById('editor-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditorModal() {
+            document.getElementById('editor-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const postId = document.getElementById('form-post-id').value;
+            const title = document.getElementById('form-title').value.trim();
+            const category = document.getElementById('form-category').value.trim() || 'Uncategorized';
+            const author = document.getElementById('form-author').value.trim() || 'Anonymous';
+            const image = document.getElementById('form-image').value.trim() || UNSPLASH_PRESETS[0];
+            const content = document.getElementById('form-content').value.trim();
+
+            const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+            const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+            const excerpt = content.length > 150 ? content.substring(0, 150) + '...' : content;
+
+            if (postId) {
+                // Update Existing
+                const index = posts.findIndex(p => p.id === postId);
+                if (index !== -1) {
+                    posts[index] = {
+                        ...posts[index],
+                        title,
+                        category,
+                        author,
+                        image,
+                        content,
+                        excerpt,
+                        readTime: `${readTimeMinutes} min read`
+                    };
+                    showToast('Essay updated successfully!');
+                }
+            } else {
+                // Create New
+                const newPost = {
+                    id: Date.now().toString(),
+                    title,
+                    category,
+                    author,
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+                    readTime: `${readTimeMinutes} min read`,
+                    image,
+                    excerpt,
+                    content
+                };
+                posts.unshift(newPost);
+                showToast('New essay published to Lumina!');
+            }
+
+            savePostsToStorage();
+            closeEditorModal();
+        }
+
+        function clonePost(postId) {
+            const original = posts.find(p => p.id === postId);
+            if (!original) return;
+
+            const copy = {
+                ...original,
+                id: Date.now().toString(),
+                title: `${original.title} (Copy)`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            };
+
+            posts.unshift(copy);
+            savePostsToStorage();
+            showToast('Essay cloned successfully');
+        }
+
+        function deletePost(postId) {
+            if (confirm('Are you sure you want to delete this essay from the Lumina database?')) {
+                posts = posts.filter(p => p.id !== postId);
+                savePostsToStorage();
+                showToast('Essay removed');
+            }
+        }
+
+        // --- Formatting & Live Preview Tools ---
+        function insertFormatting(type) {
+            const textarea = document.getElementById('form-content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+
+            let formatted = '';
+            switch(type) {
+                case 'h2':
+                    formatted = `\n## ${selectedText || 'Section Heading'}\n`;
+                    break;
+                case 'bold':
+                    formatted = `**${selectedText || 'bold text'}**`;
+                    break;
+                case 'italic':
+                    formatted = `*${selectedText || 'italic text'}*`;
+                    break;
+                case 'quote':
+                    formatted = `\n> ${selectedText || 'Memorable quote...'}\n`;
+                    break;
+                case 'list':
+                    formatted = `\n- ${selectedText || 'List item'}\n`;
+                    break;
+                case 'divider':
+                    formatted = `\n\n---\n\n`;
+                    break;
+            }
+
+            textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+            textarea.focus();
+            updateWordCount();
+            renderLivePreview();
+            triggerAutoSave();
+        }
+
+        function generateAutoExcerpt() {
+            const content = document.getElementById('form-content').value.trim();
+            if (!content) return;
+            const clean = content.replace(/[#*>-]/g, '').trim();
+            const excerpt = clean.length > 150 ? clean.substring(0, 150) + '...' : clean;
+            showToast('Excerpt generated from content preview!');
+        }
+
+        function selectPresetImage() {
+            const current = document.getElementById('form-image').value;
+            let available = UNSPLASH_PRESETS.filter(p => p !== current);
+            let next = available[Math.floor(Math.random() * available.length)];
+            document.getElementById('form-image').value = next;
+            triggerAutoSave();
+        }
+
+        function updateWordCount() {
+            const content = document.getElementById('form-content').value;
+            const words = content.trim() ? content.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+            document.getElementById('live-word-count').textContent = `${words} words`;
+        }
+
+        function renderLivePreview() {
+            const content = document.getElementById('form-content').value;
+            const preview = document.getElementById('editor-live-preview');
+
+            if (!content.trim()) {
+                preview.innerHTML = '<p class="italic text-stone-400 text-sm">Preview content will render here in real-time...</p>';
+                return;
+            }
+
+            // Simple Markdown Parser
+            let parsed = content
+                .replace(/^## (.*$)/gim, '<h3 class="text-xl font-serif font-semibold text-stone-900 dark:text-stone-100 mt-4 mb-2">$1</h3>')
+                .replace(/^\> (.*$)/gim, '<blockquote class="border-l-2 border-amber-700 dark:border-amber-500 pl-4 italic text-stone-600 dark:text-stone-300 my-4">$1</blockquote>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^---$/gim, '<hr class="my-6 border-stone-200 dark:border-stone-800">');
+
+            const paragraphs = parsed.split('\n\n').map(p => {
+                if (p.startsWith('<h3') || p.startsWith('<blockquote') || p.startsWith('<hr')) return p;
+                return `<p class="leading-relaxed mb-4">${p.replace(/\n/g, '<br>')}</p>`;
+            }).join('');
+
+            preview.innerHTML = paragraphs;
+        }
+
+        function toggleSideBySidePreview() {
+            const pane = document.getElementById('live-preview-pane');
+            const label = document.getElementById('preview-btn-label');
+            isSplitPreviewActive = !isSplitPreviewActive;
+
+            if (isSplitPreviewActive) {
+                pane.classList.remove('hidden');
+                label.textContent = 'Hide Split';
+            } else {
+                pane.classList.add('hidden');
+                label.textContent = 'Split Preview';
+            }
+        }
+
+        function triggerAutoSave() {
+            const indicator = document.getElementById('save-status-indicator');
+            indicator.textContent = 'Saving...';
+            indicator.className = 'text-amber-600 dark:text-amber-400 font-medium';
+
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                indicator.textContent = `Draft saved at ${now}`;
+                indicator.className = 'text-stone-400';
+            }, 800);
+        }
+
+        // --- Reader Modal ---
+        function openReaderModal(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            document.getElementById('modal-cover').src = post.image;
+            document.getElementById('modal-category').textContent = post.category;
+            document.getElementById('modal-title').textContent = post.title;
+            document.getElementById('modal-author').textContent = post.author;
+            document.getElementById('modal-author-avatar').textContent = post.author.charAt(0);
+            document.getElementById('modal-date').textContent = post.date;
+            document.getElementById('modal-readtime').textContent = post.readTime;
+
+            const content = post.content || '';
+            const paragraphs = content.split('\n\n').map(p => `<p class="leading-relaxed mb-6">${p}</p>`).join('');
+            document.getElementById('modal-content').innerHTML = paragraphs;
+
+            document.getElementById('reader-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReaderModal() {
+            document.getElementById('reader-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // --- Import / Export & Data Management ---
+        function toggleDataMenu() {
+            document.getElementById('data-menu').classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('data-menu');
+            const btn = e.target.closest('button');
+            if (menu && !menu.contains(e.target) && (!btn || !btn.getAttribute('onclick')?.includes('toggleDataMenu'))) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(posts, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `lumina_journal_backup_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('Backup JSON downloaded!');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        posts = imported;
+                        savePostsToStorage();
+                        showToast('Database imported successfully!');
+                    } else {
+                        alert('Invalid JSON structure. Please upload a valid JSON array of posts.');
+                    }
+                } catch(err) {
+                    alert('Error parsing JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function confirmResetDefaults() {
+            if (confirm('Reset Lumina journal database back to default seed essays?')) {
+                posts = INITIAL_POSTS;
+                savePostsToStorage();
+                showToast('Reset to Lumina seed database!');
+            }
+        }
+
+        // --- Toast Notification System ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
